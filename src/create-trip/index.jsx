@@ -12,13 +12,16 @@ import { useOlaAutocomplete } from "@/lib/ola-api";
 import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { db } from "@/service/firebaseConfig"; 
-import { doc, setDoc, serverTimestamp } from "firebase/firestore"; // Keep this
+import { db } from "@/service/firebaseConfig";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogDescription } from "@radix-ui/react-dialog";
-import { DialogHeader } from "@/components/ui/dialog";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+} from "@/components/ui/dialog";
 
 function CreateTrip() {
   const [formData, setFormData] = useState({});
@@ -34,20 +37,20 @@ function CreateTrip() {
     }));
   };
 
-  const { query, setQuery, suggestions, fetchSuggestions, handleSelectPlace } =
-    useOlaAutocomplete(handleInputChange);
+  const {
+    query,
+    setQuery,
+    suggestions,
+    fetchSuggestions,
+    handleSelectPlace,
+  } = useOlaAutocomplete(handleInputChange);
 
   useEffect(() => {
     console.log("Form Data:", formData);
   }, [formData]);
 
-  {
-    /* Google LOGIN button*/
-  }
-
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
-      console.log(tokenResponse); // token info
       getUserProfile(tokenResponse);
     },
     onError: (error) => {
@@ -55,9 +58,6 @@ function CreateTrip() {
     },
   });
 
-  {
-    /* When u press the GENERATE TRIP button */
-  }
   const onGenerateTrip = async () => {
     const user = localStorage.getItem("user");
 
@@ -71,43 +71,42 @@ function CreateTrip() {
       !formData?.budget ||
       !formData?.traveler
     ) {
-
-      toast("⚠️	Please fill all details");
+      toast("⚠️ Please fill all details");
       return;
     }
 
     setLoading(true);
+
     const FINAL_PROMPT = AI_PROMPT.replace("{location}", formData?.location)
       .replace("{noOfDays}", formData?.noOfDays)
       .replace("{traveler}", formData?.traveler)
       .replace("{budget}", formData?.budget);
 
-    console.log(FINAL_PROMPT);
-
-    const result = await chatSessions.sendMessage(FINAL_PROMPT);
-    const responseText = result?.response?.text();
-    console.log("Fetched data...and loading done");
-    setLoading(false);
-    saveAiTrip(responseText);
+    try {
+      const result = await chatSessions.sendMessage(FINAL_PROMPT);
+      const responseText = result?.response?.text();
+      console.log("Fetched AI data");
+      saveAiTrip(responseText);
+    } catch (error) {
+      toast.error("AI failed to generate trip. Try again.");
+      setLoading(false);
+    }
   };
 
   const saveAiTrip = async (TripData) => {
-    setLoading(true);
-  
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       const docId = Date.now().toString();
-  
-      const parsedData = JSON.parse(TripData); // Validate JSON
-  
+      const parsedData = JSON.parse(TripData);
+
       await setDoc(doc(db, "AITrips", docId), {
         userSelection: formData,
         tripData: parsedData,
         userEmail: user?.email,
         id: docId,
-        createdAt: serverTimestamp(), // ✅ Firestore timestamp
+        createdAt: serverTimestamp(),
       });
-  
+
       navigate("/view-trip/" + docId);
     } catch (error) {
       console.error("Error saving trip:", error);
@@ -116,7 +115,6 @@ function CreateTrip() {
       setLoading(false);
     }
   };
-  
 
   const getUserProfile = async (tokenInfo) => {
     try {
@@ -129,10 +127,9 @@ function CreateTrip() {
           },
         }
       );
-      console.log("Fetched data");
       localStorage.setItem("user", JSON.stringify(res.data));
       setOpenDailog(false);
-      onGenerateTrip();
+      onGenerateTrip(); // ✅ resume trip generation after login
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
     }
@@ -140,9 +137,7 @@ function CreateTrip() {
 
   return (
     <div className="sm:px-10 md:px-32 lg:px-56 xl:px-72 px-5 mt-10">
-      <h2 className="font-bold text-3xl">
-        Tell us your travel preferences ⛺🌴
-      </h2>
+      <h2 className="font-bold text-3xl">Tell us your travel preferences ⛺🌴</h2>
       <p className="mt-3 text-gray-500 text-xl">
         Just provide some basic information, and our trip planner will generate
         a customized itinerary based on your preferences.
@@ -196,9 +191,7 @@ function CreateTrip() {
 
         {/* Budget Selection */}
         <div>
-          <h2 className="text-xl my-3 font-medium">
-            What's your travel budget?
-          </h2>
+          <h2 className="text-xl my-3 font-medium">What's your travel budget?</h2>
           <div className="grid grid-cols-3 gap-5 mt-5">
             {selectBudgetOptions.map((item, index) => (
               <div
@@ -223,12 +216,12 @@ function CreateTrip() {
           <h2 className="text-xl my-3 font-medium">
             Who do you plan on traveling with on your next adventure?
           </h2>
-          <div className="grid grid-cols-3 gap-5 mt-5 cursor-pointer">
+          <div className="grid grid-cols-3 gap-5 cursor-pointer">
             {SelectTravelersList.map((item, index) => (
               <div
                 key={index}
                 onClick={() => handleInputChange("traveler", item.people)}
-                className={`p-4 border rounded-lg cursor-pointer hover:shadow-lg ${
+                className={`p-4 border rounded-lg hover:shadow-lg ${
                   formData?.traveler === item.people
                     ? "shadow-lg border-black"
                     : ""
