@@ -1,3 +1,7 @@
+## Project Live On:
+
+https://ai-trip-planner-seven-sigma.vercel.app/my-trips
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
