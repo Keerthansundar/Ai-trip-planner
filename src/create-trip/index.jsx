@@ -241,7 +241,7 @@ function CreateTrip() {
           {loading ? (
             <AiOutlineLoading3Quarters className="h-7 w-7 animate-spin" />
           ) : (
-            "Generate Trip"
+            "✨ Generate Trip "
           )}
         </Button>
       </div>
